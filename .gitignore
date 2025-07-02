@@ -1,0 +1,30 @@
+# ─── Python Backend ───────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.log
+venv/
+backend/.env
+
+# ─── Node Frontend ────────────────────────────
+frontend/node_modules/
+frontend/.env
+frontend/.next/
+frontend/dist/
+
+# ─── Appwrite (Docker) ────────────────────────
+docker/appwrite/appwrite/.env
+docker/appwrite/appwrite/storage/
+docker/appwrite/appwrite/uploads/
+
+# ─── System Files ─────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── VS Code ──────────────────────────────────
+.vscode/
+
+# ─── Logs and Temp ────────────────────────────
+*.log
+*.tmp
+*.swp
