@@ -4,3 +4,6 @@ python-multipart
 openai
 appwrite
 python-dotenv
+openai-whisper
+yt-dlp
+ffmpeg

@@ -12,9 +12,10 @@ export const AuthProvider = ({ children }) => {
       const user = await account.get();
       setUser(user);
     } catch {
+      // 401 is expected if user is not logged in
       setUser(null);
     } finally {
-      setLoading(false);
+      setLoading(false); // Mark auth check as complete
     }
   };
 
@@ -32,7 +33,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Then create new session
-      const session = await account.createEmailPasswordSession(email, password);
+      await account.createEmailPasswordSession(email, password);
       const user = await account.get();
       setUser(user);
       return user; // Return the user object
