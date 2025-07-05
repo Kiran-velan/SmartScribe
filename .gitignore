@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 *.log
 venv/
+backend/.env
 
 # ─── Node Frontend ────────────────────────────
 frontend/node_modules/
@@ -11,6 +12,7 @@ frontend/.env
 frontend/.next/
 frontend/dist/
 frontend/client/node_modules/
+frontend/client/.env
 
 
 # ─── Appwrite (Docker) ────────────────────────
