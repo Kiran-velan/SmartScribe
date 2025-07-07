@@ -269,8 +269,7 @@ async def talk(data: TalkRequest):
                 bucket_id=os.getenv("APPWRITE_BUCKET_ID"),
                 file_id=cached["vector_file_id"]
             )
-            pickle_bytes = vector_file.read()
-            vector_store = pickle.loads(pickle_bytes)
+            vector_store = pickle.loads(vector_file)
 
         else:
             # 🛠 Rebuild vector store
