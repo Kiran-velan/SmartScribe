@@ -40,6 +40,8 @@
 | Model for generator    | google/flan-t5-base   |
 | Deployment  | Docker, WSL (for dev)     |
 
+The responder logic using local LLM is implemented [here](https://github.com/Kiran-velan/SmartScribe/blob/main/Optional_Enhancement.md).
+Instead of using **google/flan-t5-base** as the generator model.
 ---
 
 ## 🚀 Getting Started
