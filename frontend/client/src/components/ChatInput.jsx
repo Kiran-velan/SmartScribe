@@ -4,41 +4,74 @@ import { useAuth } from "../context/AuthContext";
 const ChatInput = ({ sessionId, onNewMessage, onTranscriptUpload }) => {
   const { user } = useAuth();
   const [input, setInput] = useState("");
-  const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isUploading || isThinking) return;
 
-    const res = await fetch("http://localhost:8000/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        session_id: sessionId,
-        sender: "user",
-        text: input
-      })
-    });
+    setIsThinking(true);
 
-    const data = await res.json();
-    if (res.ok) {
-      onNewMessage(data.message_doc);
-      setInput("");
-    } else {
-      console.error(data.error);
+    try {
+      // 1. Store user message
+      const res = await fetch("http://localhost:8000/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          sender: "user",
+          text: input
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        onNewMessage(data.message_doc);  // Show user message immediately
+        setInput("");
+
+        // 2. Trigger AI response from /talk endpoint
+        const talkRes = await fetch("http://localhost:8000/talk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            prompt: input
+          })
+        });
+
+        const talkData = await talkRes.json();
+        // Use the response from /talk (already stored in messages too)
+        if (talkRes.ok) {
+          onNewMessage({
+            session_id: sessionId,
+            sender: "assistant",
+            text: talkData.response,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          console.error("Talk failed:", talkData.detail || talkData.error);
+        }
+      } else {
+        console.error("Message store failed:", data.error);
+      }
+    } catch (error) {
+      console.error("Error in handleSend:", error);
+    } finally {
+      setIsThinking(false);
     }
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file || !user) return;
+    if (!file || !user || isUploading || isThinking) return;
 
     const title = window.prompt("Enter a title for this transcript:");
     const formData = new FormData();
     formData.append("file", file);
     formData.append("session_id", sessionId);
     formData.append("user_id", user.$id);
-    formData.append("title", title || file.name); // fallback
+    formData.append("title", title || file.name);  // Use file name as default title
 
     setIsUploading(true);
     const res = await fetch("http://localhost:8000/transcripts", {
@@ -49,13 +82,15 @@ const ChatInput = ({ sessionId, onNewMessage, onTranscriptUpload }) => {
 
     const data = await res.json();
     if (res.ok) {
-      if (onTranscriptUpload) onTranscriptUpload(); // 🔁 Refresh transcript list
+      if (onTranscriptUpload) onTranscriptUpload();  // Refresh transcripts after upload
     } else {
       console.error("Transcript upload failed:", data.error);
     }
   };
 
   const handleYouTubeLink = async () => {
+    if (isUploading || isThinking) return;
+
     const url = window.prompt("Paste a YouTube link:");
     if (!url || !user) return;
 
@@ -67,15 +102,15 @@ const ChatInput = ({ sessionId, onNewMessage, onTranscriptUpload }) => {
       body: JSON.stringify({
         session_id: sessionId,
         user_id: user.$id,
-        title: title || url,
-        youtube_url: url, // your backend will detect this and process accordingly
+        title: title || url,  // Use URL as default title
+        youtube_url: url,  // your backend will detect this and process accordingly
       }),
     });
     setIsUploading(false);
 
     const data = await res.json();
     if (res.ok) {
-      if (onTranscriptUpload) onTranscriptUpload(); // 🔁 Refresh transcript list
+      if (onTranscriptUpload) onTranscriptUpload();  // Refresh transcripts after upload
     } else {
       console.error("YouTube upload failed:", data.error);
     }
@@ -89,10 +124,12 @@ const ChatInput = ({ sessionId, onNewMessage, onTranscriptUpload }) => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
+          disabled={isUploading || isThinking}
         />
         <button
           onClick={handleSend}
           className="bg-blue-500 text-white px-4 rounded"
+          disabled={isUploading || isThinking}
         >
           Send
         </button>
@@ -102,6 +139,7 @@ const ChatInput = ({ sessionId, onNewMessage, onTranscriptUpload }) => {
         <button
           onClick={() => fileInputRef.current.click()}
           className="bg-gray-700 text-white px-3 py-1 rounded"
+          disabled={isUploading || isThinking}
         >
           Upload File
         </button>
@@ -116,15 +154,17 @@ const ChatInput = ({ sessionId, onNewMessage, onTranscriptUpload }) => {
         <button
           onClick={handleYouTubeLink}
           className="bg-red-600 text-white px-3 py-1 rounded"
+          disabled={isUploading || isThinking}
         >
           Add YouTube Link
         </button>
-        {isUploading && (
-          <div className="text-sm text-gray-600 italic mt-2">
-            Transcribing... This may take a moment.
-          </div>
-        )}
       </div>
+
+      {(isUploading || isThinking) && (
+        <div className="text-sm text-gray-600 italic mt-2">
+          {isUploading ? "Transcribing... This may take a moment." : "Thinking..."}
+        </div>
+      )}
     </div>
   );
 };

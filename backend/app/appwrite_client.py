@@ -3,6 +3,7 @@ from appwrite.services.databases import Databases
 from appwrite.services.account import Account
 import os
 from dotenv import load_dotenv
+from appwrite.services.storage import Storage
 
 load_dotenv()
 
@@ -13,3 +14,4 @@ client.set_key(os.getenv("APPWRITE_API_KEY"))
 
 databases = Databases(client)
 account = Account(client)
+storage = Storage(client)
