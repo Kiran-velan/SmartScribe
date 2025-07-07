@@ -128,7 +128,7 @@ const ChatPanel = () => {
         {messages.map((msg) =>
           msg && msg.sender && msg.text ? (
             <div key={msg.$id} className={`mb-4 ${msg.sender === "user" ? "text-right" : "text-left"}`}>
-              <div className="inline-block px-3 py-2 bg-gray-200 rounded">
+              <div className={`inline-block px-4 py-3 rounded-lg max-w-md ${msg.sender === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800" }`}>
                 <p>{msg.text}</p>
               </div>
             </div>
